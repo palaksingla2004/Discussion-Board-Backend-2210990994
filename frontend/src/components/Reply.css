@@ -42,9 +42,22 @@
   color: #dc3545;
 }
 
+.vote-score-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
 .vote-score {
   font-weight: bold;
   font-size: 14px;
+  color: #333;
+}
+
+.vote-count-small {
+  font-size: 10px;
+  color: #999;
 }
 
 .reply-content {

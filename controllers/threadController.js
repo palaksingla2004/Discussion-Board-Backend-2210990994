@@ -76,6 +76,7 @@ const getAllThreads = async (req, res) => {
         author: thread.author,
         category: thread.category,
         tags: thread.tags,
+        votes: thread.votes,
         voteScore: thread.voteScore,
         replyCount: thread.replyCount,
         views: thread.views,

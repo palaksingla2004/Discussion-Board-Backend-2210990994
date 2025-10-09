@@ -20,20 +20,39 @@
   align-items: center;
   gap: 5px;
   color: #666;
+  min-width: 60px;
 }
 
 .vote-icon {
-  cursor: pointer;
-  transition: color 0.2s;
+  font-size: 16px;
+  color: #999;
 }
 
-.vote-icon:hover {
-  color: #007bff;
+.vote-icon.upvote {
+  color: #28a745;
+}
+
+.vote-icon.downvote {
+  color: #dc3545;
+}
+
+.vote-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .vote-score {
   font-weight: bold;
-  font-size: 18px;
+  font-size: 20px;
+  color: #333;
+}
+
+.total-votes {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
 }
 
 .thread-content {

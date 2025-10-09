@@ -48,8 +48,7 @@ const ThreadDetail = () => {
       return
     }
     try {
-      const response = await voteAPI.voteThread(id, type)
-      console.log('Vote response:', response.data)
+      await voteAPI.voteThread(id, type)
       // Reload thread to get updated vote counts
       await loadThread()
     } catch (error) {
@@ -114,24 +113,17 @@ const ThreadDetail = () => {
     )
   }
 
-  // Debug: Log votes data
-  console.log('Thread votes:', thread.votes)
-  console.log('Current user:', user)
-  
   const upvotes = thread.votes?.filter(v => v.type === 'upvote').length || 0
   const downvotes = thread.votes?.filter(v => v.type === 'downvote').length || 0
   const voteScore = upvotes - downvotes
+  const totalVotes = upvotes + downvotes
   
   // Check if current user has voted
   const userVote = user ? thread.votes?.find(v => {
     const voteUserId = typeof v.user === 'object' ? v.user._id || v.user.id : v.user
     const currentUserId = user._id || user.id
-    console.log('Comparing vote user:', voteUserId, 'with current user:', currentUserId)
     return voteUserId?.toString() === currentUserId?.toString()
   }) : null
-  
-  console.log('User vote:', userVote)
-  console.log('Vote score:', voteScore, '(upvotes:', upvotes, 'downvotes:', downvotes, ')')
 
   return (
     <div className="thread-detail">
@@ -161,7 +153,10 @@ const ThreadDetail = () => {
             >
               <FaArrowUp />
             </button>
-            <span className="vote-count">{voteScore}</span>
+            <div className="vote-info">
+              <span className="vote-count">{voteScore}</span>
+              <span className="vote-details">({upvotes} ↑ {downvotes} ↓)</span>
+            </div>
             <button 
               onClick={() => handleVote('downvote')} 
               className={`vote-btn ${userVote?.type === 'downvote' ? 'active downvote' : ''}`}

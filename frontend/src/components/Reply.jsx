@@ -74,16 +74,19 @@ const Reply = ({ reply, threadId, onUpdate, onDelete, onReply }) => {
           onClick={() => handleVote('upvote')} 
           className={`vote-icon-btn ${userVote?.type === 'upvote' ? 'active upvote' : ''}`}
           disabled={!user}
-          title={!user ? 'Login to vote' : 'Upvote'}
+          title={!user ? 'Login to vote' : `Upvote (${upvotes})`}
         >
           <FaArrowUp />
         </button>
-        <span className="vote-score">{voteScore}</span>
+        <div className="vote-score-container">
+          <span className="vote-score">{voteScore}</span>
+          <span className="vote-count-small">{upvotes + downvotes}</span>
+        </div>
         <button 
           onClick={() => handleVote('downvote')} 
           className={`vote-icon-btn ${userVote?.type === 'downvote' ? 'active downvote' : ''}`}
           disabled={!user}
-          title={!user ? 'Login to vote' : 'Downvote'}
+          title={!user ? 'Login to vote' : `Downvote (${downvotes})`}
         >
           <FaArrowDown />
         </button>

@@ -4,9 +4,10 @@ import { formatRelativeTime } from '../utils/formatDate'
 import './ThreadCard.css'
 
 const ThreadCard = ({ thread }) => {
-  const voteScore =
-    (thread.votes?.filter(v => v.type === 'upvote').length || 0) -
-    (thread.votes?.filter(v => v.type === 'downvote').length || 0)
+  const upvotes = thread.votes?.filter(v => v.type === 'upvote').length || 0
+  const downvotes = thread.votes?.filter(v => v.type === 'downvote').length || 0
+  const voteScore = upvotes - downvotes
+  const totalVotes = upvotes + downvotes
 
   // Get thread ID safely
   const threadId = thread._id || thread.id
@@ -19,9 +20,12 @@ const ThreadCard = ({ thread }) => {
   return (
     <div className="thread-card">
       <div className="thread-votes">
-        <FaArrowUp className="vote-icon" />
-        <span className="vote-score">{voteScore}</span>
-        <FaArrowDown className="vote-icon" />
+        <FaArrowUp className="vote-icon upvote" />
+        <div className="vote-info">
+          <span className="vote-score">{voteScore}</span>
+          <span className="total-votes">{totalVotes} votes</span>
+        </div>
+        <FaArrowDown className="vote-icon downvote" />
       </div>
       <div className="thread-content">
         <Link to={`/thread/${threadId}`} className="thread-title">
