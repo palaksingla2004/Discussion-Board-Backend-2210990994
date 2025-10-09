@@ -1,0 +1,43 @@
+.create-thread {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.create-thread h2 {
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.tag-input-container {
+  display: flex;
+  gap: 10px;
+}
+
+.tag-input-container input {
+  flex: 1;
+}
+
+.selected-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.selected-tags .tag-badge {
+  background: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selected-tags .tag-badge button {
+  background: none;
+  color: white;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+}
