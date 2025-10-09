@@ -5,7 +5,7 @@ const Thread = require('../models/Thread');
 const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.userId)
-            .select('-password -email');
+            .select('-password');
 
         if (!user || !user.isActive) {
             return res.status(404).json({ message: 'User not found' });
@@ -24,17 +24,16 @@ const getUserById = async (req, res) => {
         });
 
         res.json({
-            user: {
-                id: user._id,
-                username: user.username,
-                avatar: user.avatar,
-                bio: user.bio,
-                reputation: user.reputation,
-                role: user.role,
-                joinedAt: user.joinedAt,
-                threadCount,
-                replyCount
-            }
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            avatar: user.avatar,
+            bio: user.bio,
+            reputation: user.reputation,
+            role: user.role,
+            joinedAt: user.joinedAt,
+            threadCount,
+            replyCount
         });
     } catch (error) {
         console.error('User profile error:', error);
@@ -84,35 +83,17 @@ const getUserThreads = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const threads = await Thread.find({ author: req.params.userId })
-            .populate('author', 'username avatar')
+            .populate('author', 'username avatar reputation role')
             .populate('category', 'name color')
-            .populate('tags', 'name color')
+            .populate('tags', 'name')
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(limit);
+            .limit(limit)
+            .lean();
 
         const total = await Thread.countDocuments({ author: req.params.userId });
 
-        res.json({
-            threads: threads.map(thread => ({
-                id: thread._id,
-                title: thread.title,
-                content: thread.content.substring(0, 200) + '...',
-                author: thread.author,
-                category: thread.category,
-                tags: thread.tags,
-                voteScore: thread.voteScore,
-                replyCount: thread.replyCount,
-                views: thread.views,
-                createdAt: thread.createdAt,
-                lastActivity: thread.lastActivity
-            })),
-            pagination: {
-                current: page,
-                pages: Math.ceil(total / limit),
-                total
-            }
-        });
+        res.json(threads);
     } catch (error) {
         console.error('User threads error:', error);
         res.status(500).json({ message: 'Server error' });

@@ -33,6 +33,7 @@ const register = async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
+        _id: user._id,
         id: user._id,
         username: user.username,
         email: user.email,
@@ -75,6 +76,7 @@ const login = async (req, res) => {
       message: 'Login successful',
       token,
       user: {
+        _id: user._id,
         id: user._id,
         username: user.username,
         email: user.email,
@@ -93,17 +95,16 @@ const login = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     res.json({
-      user: {
-        id: req.user._id,
-        username: req.user.username,
-        email: req.user.email,
-        avatar: req.user.avatar,
-        bio: req.user.bio,
-        reputation: req.user.reputation,
-        role: req.user.role,
-        joinedAt: req.user.joinedAt,
-        lastActive: req.user.lastActive
-      }
+      _id: req.user._id,
+      id: req.user._id,
+      username: req.user.username,
+      email: req.user.email,
+      avatar: req.user.avatar,
+      bio: req.user.bio,
+      reputation: req.user.reputation,
+      role: req.user.role,
+      joinedAt: req.user.joinedAt,
+      lastActive: req.user.lastActive
     });
   } catch (error) {
     console.error('Profile fetch error:', error);

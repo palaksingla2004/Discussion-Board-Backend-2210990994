@@ -1,6 +1,31 @@
-# Forum Backend API
+# Forum - Full Stack Discussion Platform
 
-A robust backend API for an online discussion forum built with Node.js, Express, and MongoDB. This API supports user authentication, thread creation, nested replies, voting system, categories, and tags.
+A complete full-stack discussion forum application with a robust backend API and modern React frontend. Built with Node.js, Express, MongoDB, and React.
+
+## Quick Start
+
+See [SETUP.md](SETUP.md) for detailed setup instructions.
+
+**Automated Setup (Windows):**
+```powershell
+.\setup.ps1
+```
+
+Then start both servers:
+```bash
+# Terminal 1 - Backend
+npm run dev
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
+
+Open http://localhost:3000 in your browser.
+
+---
+
+# Backend API Documentation
 
 ## Features
 

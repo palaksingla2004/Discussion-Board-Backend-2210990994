@@ -20,4 +20,5 @@ router.put('/:threadId', authenticateToken, validateThread, threadController.upd
 // Delete thread (only by author or admin)
 router.delete('/:threadId', authenticateToken, threadController.deleteThread);
 
+
 module.exports = router;

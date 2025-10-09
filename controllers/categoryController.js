@@ -4,10 +4,12 @@ const Category = require('../models/Category');
 const getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find({ isActive: true })
-      .sort({ name: 1 });
+      .sort({ name: 1 })
+      .lean();
 
     res.json({
       categories: categories.map(cat => ({
+        _id: cat._id,
         id: cat._id,
         name: cat.name,
         description: cat.description,

@@ -26,10 +26,12 @@ const getAllTags = async (req, res) => {
 
     const tags = await Tag.find(query)
       .sort(sortOptions)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
 
     res.json({
       tags: tags.map(tag => ({
+        _id: tag._id,
         id: tag._id,
         name: tag.name,
         description: tag.description,
