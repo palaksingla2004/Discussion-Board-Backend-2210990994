@@ -14,6 +14,39 @@
   color: #666;
 }
 
+.vote-icon-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  padding: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vote-icon-btn:hover:not(:disabled) {
+  color: #007bff;
+  transform: scale(1.2);
+}
+
+.vote-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vote-icon-btn.active.upvote {
+  color: #28a745;
+}
+
+.vote-icon-btn.active.downvote {
+  color: #dc3545;
+}
+
+.vote-score {
+  font-weight: bold;
+  font-size: 14px;
+}
+
 .reply-content {
   flex: 1;
 }

@@ -12,16 +12,24 @@ const Reply = ({ reply, threadId, onUpdate, onDelete, onReply }) => {
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [replyContent, setReplyContent] = useState('')
 
-  const voteScore = reply.votes?.filter(v => v.type === 'upvote').length - 
-                    reply.votes?.filter(v => v.type === 'downvote').length || 0
+  const upvotes = reply.votes?.filter(v => v.type === 'upvote').length || 0
+  const downvotes = reply.votes?.filter(v => v.type === 'downvote').length || 0
+  const voteScore = upvotes - downvotes
+  
+  // Check if current user has voted
+  const userVote = user ? reply.votes?.find(v => v.user === user._id || v.user === user.id) : null
 
   const handleVote = async (type) => {
-    if (!user) return
+    if (!user) {
+      alert('Please login to vote')
+      return
+    }
     try {
       await voteAPI.voteReply(threadId, reply._id, type)
       onUpdate()
     } catch (error) {
       console.error('Vote error:', error)
+      alert(error.response?.data?.message || 'Failed to vote')
     }
   }
 
@@ -62,9 +70,23 @@ const Reply = ({ reply, threadId, onUpdate, onDelete, onReply }) => {
   return (
     <div className="reply">
       <div className="reply-votes">
-        <FaArrowUp onClick={() => handleVote('upvote')} className="vote-icon" />
-        <span>{voteScore}</span>
-        <FaArrowDown onClick={() => handleVote('downvote')} className="vote-icon" />
+        <button 
+          onClick={() => handleVote('upvote')} 
+          className={`vote-icon-btn ${userVote?.type === 'upvote' ? 'active upvote' : ''}`}
+          disabled={!user}
+          title={!user ? 'Login to vote' : 'Upvote'}
+        >
+          <FaArrowUp />
+        </button>
+        <span className="vote-score">{voteScore}</span>
+        <button 
+          onClick={() => handleVote('downvote')} 
+          className={`vote-icon-btn ${userVote?.type === 'downvote' ? 'active downvote' : ''}`}
+          disabled={!user}
+          title={!user ? 'Login to vote' : 'Downvote'}
+        >
+          <FaArrowDown />
+        </button>
       </div>
       <div className="reply-content">
         <div className="reply-header">
@@ -92,7 +114,7 @@ const Reply = ({ reply, threadId, onUpdate, onDelete, onReply }) => {
               <FaReply /> Reply
             </button>
           )}
-          {user && user._id === reply.author?._id && (
+          {user && (user._id === reply.author?._id || user.id === reply.author?._id) && (
             <>
               <button onClick={() => setIsEditing(true)} className="reply-action-btn">
                 <FaEdit /> Edit

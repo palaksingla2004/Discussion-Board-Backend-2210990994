@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Frontend Test</h1>
+    <p>If you see this, the server is working!</p>
+    <script>
+        console.log('Test page loaded successfully');
+        fetch('/api/health')
+            .then(res => res.json())
+            .then(data => {
+                console.log('Backend health:', data);
+                document.body.innerHTML += '<p>Backend Status: ' + data.status + '</p>';
+            })
+            .catch(err => {
+                console.error('Backend error:', err);
+                document.body.innerHTML += '<p>Backend Error: ' + err.message + '</p>';
+            });
+    </script>
+</body>
+</html>

@@ -249,21 +249,21 @@ module.exports = seedDatabase;
 // Run seeding if this file is executed directly
 if (require.main === module) {
   require('dotenv').config();
-  
+
   mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/forum_db', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
-    console.log('Connected to MongoDB');
-    return seedDatabase();
-  })
-  .then(() => {
-    console.log('Seeding completed');
-    process.exit(0);
-  })
-  .catch(err => {
-    console.error('Seeding failed:', err);
-    process.exit(1);
-  });
+    .then(() => {
+      console.log('Connected to MongoDB');
+      return seedDatabase();
+    })
+    .then(() => {
+      console.log('Seeding completed');
+      process.exit(0);
+    })
+    .catch(err => {
+      console.error('Seeding failed:', err);
+      process.exit(1);
+    });
 }

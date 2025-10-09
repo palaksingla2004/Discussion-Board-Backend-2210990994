@@ -47,14 +47,30 @@
 
 .vote-btn {
   background: none;
+  border: none;
   color: #666;
   font-size: 20px;
   padding: 5px 10px;
-  transition: color 0.2s;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.vote-btn:hover {
+.vote-btn:hover:not(:disabled) {
   color: #007bff;
+  transform: scale(1.1);
+}
+
+.vote-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vote-btn.active.upvote {
+  color: #28a745;
+}
+
+.vote-btn.active.downvote {
+  color: #dc3545;
 }
 
 .vote-count {

@@ -4,7 +4,14 @@ const Thread = require('../models/Thread');
 // Get user profile by ID
 const getUserById = async (req, res) => {
     try {
-        const user = await User.findById(req.params.userId)
+        const userId = req.params.userId;
+        
+        // Validate userId
+        if (!userId || userId === 'undefined' || userId === 'null') {
+            return res.status(400).json({ message: 'Invalid user ID' });
+        }
+        
+        const user = await User.findById(userId)
             .select('-password -email');
 
         if (!user || !user.isActive) {
@@ -24,17 +31,16 @@ const getUserById = async (req, res) => {
         });
 
         res.json({
-            user: {
-                id: user._id,
-                username: user.username,
-                avatar: user.avatar,
-                bio: user.bio,
-                reputation: user.reputation,
-                role: user.role,
-                joinedAt: user.joinedAt,
-                threadCount,
-                replyCount
-            }
+            _id: user._id,
+            id: user._id,
+            username: user.username,
+            avatar: user.avatar,
+            bio: user.bio,
+            reputation: user.reputation,
+            role: user.role,
+            joinedAt: user.joinedAt,
+            threadCount,
+            replyCount
         });
     } catch (error) {
         console.error('User profile error:', error);
@@ -79,11 +85,18 @@ const updateProfile = async (req, res) => {
 // Get user's threads
 const getUserThreads = async (req, res) => {
     try {
+        const userId = req.params.userId;
+        
+        // Validate userId
+        if (!userId || userId === 'undefined' || userId === 'null') {
+            return res.status(400).json({ message: 'Invalid user ID' });
+        }
+        
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const threads = await Thread.find({ author: req.params.userId })
+        const threads = await Thread.find({ author: userId })
             .populate('author', 'username avatar')
             .populate('category', 'name color')
             .populate('tags', 'name color')
@@ -93,26 +106,20 @@ const getUserThreads = async (req, res) => {
 
         const total = await Thread.countDocuments({ author: req.params.userId });
 
-        res.json({
-            threads: threads.map(thread => ({
-                id: thread._id,
-                title: thread.title,
-                content: thread.content.substring(0, 200) + '...',
-                author: thread.author,
-                category: thread.category,
-                tags: thread.tags,
-                voteScore: thread.voteScore,
-                replyCount: thread.replyCount,
-                views: thread.views,
-                createdAt: thread.createdAt,
-                lastActivity: thread.lastActivity
-            })),
-            pagination: {
-                current: page,
-                pages: Math.ceil(total / limit),
-                total
-            }
-        });
+        res.json(threads.map(thread => ({
+            _id: thread._id,
+            id: thread._id,
+            title: thread.title,
+            content: thread.content.substring(0, 200) + '...',
+            author: thread.author,
+            category: thread.category,
+            tags: thread.tags,
+            voteScore: thread.voteScore,
+            replyCount: thread.replyCount,
+            views: thread.views,
+            createdAt: thread.createdAt,
+            lastActivity: thread.lastActivity
+        })));
     } catch (error) {
         console.error('User threads error:', error);
         res.status(500).json({ message: 'Server error' });

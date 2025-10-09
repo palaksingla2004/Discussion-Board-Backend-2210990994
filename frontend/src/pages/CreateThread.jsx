@@ -69,7 +69,13 @@ const CreateThread = () => {
       }
 
       const response = await threadAPI.create(threadData)
-      navigate(`/thread/${response.data._id}`)
+      const threadId = response.data.thread?._id || response.data.thread?.id || response.data._id || response.data.id
+      if (threadId) {
+        navigate(`/thread/${threadId}`)
+      } else {
+        // Fallback to home if no ID
+        navigate('/')
+      }
     } catch (err) {
       console.error('Create thread error:', err)
       setError(err.response?.data?.message || 'Failed to create thread')

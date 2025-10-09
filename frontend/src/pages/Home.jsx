@@ -22,15 +22,35 @@ const Home = () => {
     try {
       setLoading(true)
       setError(null)
+      
       const [threadsRes, categoriesRes] = await Promise.all([
         threadAPI.getAll(filters),
         categoryAPI.getAll()
       ])
-      setThreads(threadsRes.data.threads || threadsRes.data || [])
-      setCategories(categoriesRes.data.categories || categoriesRes.data || [])
+      
+      console.log('Threads response:', threadsRes.data)
+      console.log('Categories response:', categoriesRes.data)
+      
+      // Ensure threads is always an array
+      let threadsData = threadsRes.data.threads || threadsRes.data || []
+      if (!Array.isArray(threadsData)) {
+        console.warn('Threads data is not an array:', threadsData)
+        threadsData = []
+      }
+      
+      // Ensure categories is always an array
+      let categoriesData = categoriesRes.data.categories || categoriesRes.data || []
+      if (!Array.isArray(categoriesData)) {
+        console.warn('Categories data is not an array:', categoriesData)
+        categoriesData = []
+      }
+      
+      setThreads(threadsData)
+      setCategories(categoriesData)
     } catch (error) {
       console.error('Error loading data:', error)
-      setError(error.message || 'Failed to load data')
+      console.error('Error details:', error.response?.data)
+      setError(error.response?.data?.message || error.message || 'Failed to load data')
       setThreads([])
       setCategories([])
     } finally {
@@ -76,7 +96,7 @@ const Home = () => {
             className="filter-select"
           >
             <option value="">All Categories</option>
-            {categories.map(cat => (
+            {Array.isArray(categories) && categories.map(cat => (
               <option key={cat._id || cat.id} value={cat._id || cat.id}>{cat.name}</option>
             ))}
           </select>
@@ -92,7 +112,7 @@ const Home = () => {
         </div>
       </div>
       <div className="threads-list">
-        {threads.length === 0 ? (
+        {!Array.isArray(threads) || threads.length === 0 ? (
           <div className="no-threads">
             <p>No threads found. Be the first to create one!</p>
           </div>

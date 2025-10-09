@@ -15,17 +15,28 @@ const ThreadDetail = () => {
   const [thread, setThread] = useState(null)
   const [replyContent, setReplyContent] = useState('')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!id || id === 'undefined') {
+      setError('Invalid thread ID')
+      setLoading(false)
+      return
+    }
     loadThread()
   }, [id])
 
   const loadThread = async () => {
     try {
+      setLoading(true)
+      setError(null)
+      console.log('Loading thread with ID:', id)
       const response = await threadAPI.getById(id)
+      console.log('Thread loaded:', response.data)
       setThread(response.data)
     } catch (error) {
       console.error('Error loading thread:', error)
+      setError(error.response?.data?.message || 'Failed to load thread')
     } finally {
       setLoading(false)
     }
@@ -37,10 +48,13 @@ const ThreadDetail = () => {
       return
     }
     try {
-      await voteAPI.voteThread(id, type)
-      loadThread()
+      const response = await voteAPI.voteThread(id, type)
+      console.log('Vote response:', response.data)
+      // Reload thread to get updated vote counts
+      await loadThread()
     } catch (error) {
       console.error('Vote error:', error)
+      alert(error.response?.data?.message || 'Failed to vote')
     }
   }
 
@@ -72,12 +86,52 @@ const ThreadDetail = () => {
     return <div className="loading">Loading thread...</div>
   }
 
-  if (!thread) {
-    return <div className="loading">Thread not found</div>
+  if (error) {
+    return (
+      <div className="home">
+        <div className="card">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button onClick={() => navigate('/')} className="btn btn-primary">
+            Back to Home
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  const voteScore = thread.votes?.filter(v => v.type === 'upvote').length - 
-                    thread.votes?.filter(v => v.type === 'downvote').length || 0
+  if (!thread) {
+    return (
+      <div className="home">
+        <div className="card">
+          <h2>Thread Not Found</h2>
+          <p>The thread you're looking for doesn't exist.</p>
+          <button onClick={() => navigate('/')} className="btn btn-primary">
+            Back to Home
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Debug: Log votes data
+  console.log('Thread votes:', thread.votes)
+  console.log('Current user:', user)
+  
+  const upvotes = thread.votes?.filter(v => v.type === 'upvote').length || 0
+  const downvotes = thread.votes?.filter(v => v.type === 'downvote').length || 0
+  const voteScore = upvotes - downvotes
+  
+  // Check if current user has voted
+  const userVote = user ? thread.votes?.find(v => {
+    const voteUserId = typeof v.user === 'object' ? v.user._id || v.user.id : v.user
+    const currentUserId = user._id || user.id
+    console.log('Comparing vote user:', voteUserId, 'with current user:', currentUserId)
+    return voteUserId?.toString() === currentUserId?.toString()
+  }) : null
+  
+  console.log('User vote:', userVote)
+  console.log('Vote score:', voteScore, '(upvotes:', upvotes, 'downvotes:', downvotes, ')')
 
   return (
     <div className="thread-detail">
@@ -99,15 +153,25 @@ const ThreadDetail = () => {
         </div>
         <div className="thread-actions">
           <div className="vote-buttons">
-            <button onClick={() => handleVote('upvote')} className="vote-btn">
+            <button 
+              onClick={() => handleVote('upvote')} 
+              className={`vote-btn ${userVote?.type === 'upvote' ? 'active upvote' : ''}`}
+              disabled={!user}
+              title={!user ? 'Login to vote' : 'Upvote'}
+            >
               <FaArrowUp />
             </button>
             <span className="vote-count">{voteScore}</span>
-            <button onClick={() => handleVote('downvote')} className="vote-btn">
+            <button 
+              onClick={() => handleVote('downvote')} 
+              className={`vote-btn ${userVote?.type === 'downvote' ? 'active downvote' : ''}`}
+              disabled={!user}
+              title={!user ? 'Login to vote' : 'Downvote'}
+            >
               <FaArrowDown />
             </button>
           </div>
-          {user && user._id === thread.author?._id && (
+          {user && (user._id === thread.author?._id || user.id === thread.author?._id) && (
             <button onClick={handleDeleteThread} className="btn btn-danger">
               Delete Thread
             </button>

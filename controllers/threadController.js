@@ -1,4 +1,300 @@
 const Thread = require('../models/Thread');
+const Category = require('../models/Category');
+const Tag = require('../models/Tag');
+const mongoose = require('mongoose');
+
+// Get all threads with filtering and sorting
+const getAllThreads = async (req, res) => {
+  try {
+    const { category, tag, search, sort = 'recent', page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    let query = {};
+
+    // Category filter - handle both name and ObjectId
+    if (category) {
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        query.category = category;
+      } else {
+        // Look up category by name
+        const categoryDoc = await Category.findOne({ name: category });
+        if (categoryDoc) {
+          query.category = categoryDoc._id;
+        } else {
+          // If category not found, return empty results
+          return res.json({
+            threads: [],
+            pagination: { current: parseInt(page), pages: 0, total: 0 }
+          });
+        }
+      }
+    }
+
+    // Tag filter
+    if (tag) {
+      query.tags = tag;
+    }
+
+    // Search filter
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Sorting
+    let sortOption = {};
+    switch (sort) {
+      case 'popular':
+        sortOption = { views: -1 };
+        break;
+      case 'votes':
+        sortOption = { voteScore: -1 };
+        break;
+      case 'recent':
+      default:
+        sortOption = { lastActivity: -1, createdAt: -1 };
+    }
+
+    const threads = await Thread.find(query)
+      .populate('author', 'username avatar reputation role')
+      .populate('category', 'name color')
+      .populate('tags', 'name color')
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Thread.countDocuments(query);
+
+    res.json({
+      threads: threads.map(thread => ({
+        _id: thread._id,
+        id: thread._id,
+        title: thread.title,
+        content: thread.content.substring(0, 200) + (thread.content.length > 200 ? '...' : ''),
+        author: thread.author,
+        category: thread.category,
+        tags: thread.tags,
+        voteScore: thread.voteScore,
+        replyCount: thread.replyCount,
+        views: thread.views,
+        isPinned: thread.isPinned,
+        isLocked: thread.isLocked,
+        createdAt: thread.createdAt,
+        lastActivity: thread.lastActivity
+      })),
+      pagination: {
+        current: parseInt(page),
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Get threads error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Create new thread
+const createThread = async (req, res) => {
+  try {
+    const { title, content, category, tags } = req.body;
+
+    // Validate required fields
+    if (!title || !content || !category) {
+      return res.status(400).json({ message: 'Title, content, and category are required' });
+    }
+
+    // Convert tag names to tag IDs
+    let tagIds = [];
+    if (tags && tags.length > 0) {
+      for (const tagName of tags) {
+        let tag = await Tag.findOne({ name: tagName });
+        if (!tag) {
+          // Create new tag if it doesn't exist
+          tag = new Tag({ name: tagName });
+          await tag.save();
+        }
+        tagIds.push(tag._id);
+      }
+    }
+
+    // Create thread
+    const thread = new Thread({
+      title,
+      content,
+      author: req.user._id,
+      category,
+      tags: tagIds
+    });
+
+    await thread.save();
+
+    // Update category thread count
+    await Category.findByIdAndUpdate(category, { $inc: { threadCount: 1 } });
+
+    // Update tag usage counts
+    if (tagIds.length > 0) {
+      await Tag.updateMany(
+        { _id: { $in: tagIds } },
+        { $inc: { usageCount: 1 } }
+      );
+    }
+
+    // Populate the thread
+    await thread.populate('author', 'username avatar reputation role');
+    await thread.populate('category', 'name color');
+    await thread.populate('tags', 'name color');
+
+    res.status(201).json({
+      message: 'Thread created successfully',
+      thread: {
+        _id: thread._id,
+        id: thread._id,
+        title: thread.title,
+        content: thread.content,
+        author: thread.author,
+        category: thread.category,
+        tags: thread.tags,
+        voteScore: thread.voteScore,
+        replyCount: thread.replyCount,
+        views: thread.views,
+        createdAt: thread.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Create thread error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get thread by ID
+const getThreadById = async (req, res) => {
+  try {
+    const threadId = req.params.threadId || req.params.id;
+    
+    // Validate thread ID
+    if (!threadId || threadId === 'undefined' || threadId === 'null') {
+      return res.status(400).json({ message: 'Invalid thread ID' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(threadId)) {
+      return res.status(400).json({ message: 'Invalid thread ID format' });
+    }
+
+    const thread = await Thread.findById(threadId)
+      .populate('author', 'username avatar reputation role')
+      .populate('category', 'name color')
+      .populate('tags', 'name color')
+      .populate({
+        path: 'replies.author',
+        select: 'username avatar reputation role'
+      });
+
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    // Increment view count
+    thread.views += 1;
+    await thread.save();
+
+    res.json({
+      _id: thread._id,
+      id: thread._id,
+      title: thread.title,
+      content: thread.content,
+      author: thread.author,
+      category: thread.category,
+      tags: thread.tags,
+      votes: thread.votes,
+      voteScore: thread.voteScore,
+      replyCount: thread.replyCount,
+      views: thread.views,
+      isPinned: thread.isPinned,
+      isLocked: thread.isLocked,
+      replies: thread.replies,
+      createdAt: thread.createdAt,
+      lastActivity: thread.lastActivity
+    });
+  } catch (error) {
+    console.error('Get thread error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update thread
+const updateThread = async (req, res) => {
+  try {
+    const { title, content, category, tags } = req.body;
+    
+    const thread = await Thread.findById(req.params.threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    // Check authorization
+    if (thread.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to edit this thread' });
+    }
+
+    // Update fields
+    if (title) thread.title = title;
+    if (content) thread.content = content;
+    if (category) thread.category = category;
+    if (tags) thread.tags = tags;
+
+    thread.isEdited = true;
+    thread.editedAt = new Date();
+
+    await thread.save();
+    await thread.populate('author', 'username avatar reputation role');
+    await thread.populate('category', 'name color');
+    await thread.populate('tags', 'name color');
+
+    res.json({
+      message: 'Thread updated successfully',
+      thread
+    });
+  } catch (error) {
+    console.error('Update thread error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Delete thread
+const deleteThread = async (req, res) => {
+  try {
+    const thread = await Thread.findById(req.params.threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    // Check authorization
+    if (thread.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete this thread' });
+    }
+
+    // Update category thread count
+    await Category.findByIdAndUpdate(thread.category, { $inc: { threadCount: -1 } });
+
+    // Update tag usage counts
+    if (thread.tags && thread.tags.length > 0) {
+      await Tag.updateMany(
+        { _id: { $in: thread.tags } },
+        { $inc: { usageCount: -1 } }
+      );
+    }
+
+    await Thread.findByIdAndDelete(req.params.threadId);
+
+    res.json({ message: 'Thread deleted successfully' });
+  } catch (error) {
+    console.error('Delete thread error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 // Add reply to thread
 const addReply = async (req, res) => {
@@ -204,34 +500,13 @@ const deleteReply = async (req, res) => {
   }
 };
 
-// Placeholder implementations for thread routes
-const getAllThreads = (req, res) => {
-  res.status(200).json({ message: 'getAllThreads placeholder' });
-};
-
-const createThread = (req, res) => {
-  res.status(201).json({ message: 'createThread placeholder' });
-};
-
-const getThreadById = (req, res) => {
-  res.status(200).json({ message: 'getThreadById placeholder' });
-};
-
-const updateThread = (req, res) => {
-  res.status(200).json({ message: 'updateThread placeholder' });
-};
-
-const deleteThread = (req, res) => {
-  res.status(200).json({ message: 'deleteThread placeholder' });
-};
-
 module.exports = {
-  addReply,
-  updateReply,
-  deleteReply,
   getAllThreads,
   createThread,
   getThreadById,
   updateThread,
-  deleteThread
+  deleteThread,
+  addReply,
+  updateReply,
+  deleteReply
 };

@@ -6,6 +6,12 @@ const voteOnThread = async (req, res) => {
   try {
     const { type } = req.body; // 'upvote' or 'downvote'
     
+    console.log('Vote request:', {
+      threadId: req.params.threadId,
+      type,
+      userId: req.user._id
+    });
+    
     if (!['upvote', 'downvote'].includes(type)) {
       return res.status(400).json({ message: 'Invalid vote type' });
     }
@@ -14,6 +20,8 @@ const voteOnThread = async (req, res) => {
     if (!thread) {
       return res.status(404).json({ message: 'Thread not found' });
     }
+    
+    console.log('Thread found, current votes:', thread.votes.length);
 
     // Check if user already voted
     const existingVoteIndex = thread.votes.findIndex(
@@ -60,14 +68,22 @@ const voteOnThread = async (req, res) => {
     // Get user's current vote
     const userVote = thread.votes.find(v => v.user.toString() === req.user._id.toString());
 
+    console.log('Vote recorded successfully:', {
+      voteScore,
+      userVote: userVote ? userVote.type : null,
+      totalVotes: thread.votes.length
+    });
+
     res.json({
       message: 'Vote recorded successfully',
       voteScore,
-      userVote: userVote ? userVote.type : null
+      userVote: userVote ? userVote.type : null,
+      upvotes,
+      downvotes
     });
   } catch (error) {
     console.error('Thread vote error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 

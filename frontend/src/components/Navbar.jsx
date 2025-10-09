@@ -11,6 +11,14 @@ const Navbar = () => {
     navigate('/')
   }
 
+  // Get user ID safely
+  const getUserId = () => {
+    if (!user) return null
+    return user._id || user.id
+  }
+
+  const userId = getUserId()
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -19,10 +27,10 @@ const Navbar = () => {
         </Link>
         <div className="navbar-links">
           <Link to="/" className="nav-link">Home</Link>
-          {user ? (
+          {user && userId ? (
             <>
               <Link to="/create" className="nav-link">Create Thread</Link>
-              <Link to={`/profile/${user._id || user.id}`} className="nav-link">Profile</Link>
+              <Link to={`/profile/${userId}`} className="nav-link">Profile</Link>
               <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
             </>
           ) : (

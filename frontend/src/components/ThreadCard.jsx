@@ -8,6 +8,14 @@ const ThreadCard = ({ thread }) => {
     (thread.votes?.filter(v => v.type === 'upvote').length || 0) -
     (thread.votes?.filter(v => v.type === 'downvote').length || 0)
 
+  // Get thread ID safely
+  const threadId = thread._id || thread.id
+  
+  if (!threadId) {
+    console.error('Thread missing ID:', thread)
+    return null
+  }
+
   return (
     <div className="thread-card">
       <div className="thread-votes">
@@ -16,7 +24,7 @@ const ThreadCard = ({ thread }) => {
         <FaArrowDown className="vote-icon" />
       </div>
       <div className="thread-content">
-        <Link to={`/thread/${thread._id}`} className="thread-title">
+        <Link to={`/thread/${threadId}`} className="thread-title">
           {thread.title}
         </Link>
         <div className="thread-meta">

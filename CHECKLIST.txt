@@ -1,0 +1,84 @@
+========================================
+  DISCUSSION FORUM - STARTUP CHECKLIST
+========================================
+
+BEFORE STARTING:
+[ ] MongoDB is installed
+[ ] MongoDB is running (check Services)
+[ ] Node.js is installed
+[ ] Dependencies installed (npm install)
+[ ] Frontend dependencies installed (cd frontend && npm install)
+
+FIRST TIME SETUP:
+[ ] Run: node utils/seedData.js
+[ ] Verify: "Database seeded successfully!" message
+
+START SERVERS:
+[ ] Terminal 1: npm run dev (backend on port 5000)
+[ ] Terminal 2: cd frontend && npm run dev (frontend on port 3000)
+[ ] Both servers running without errors
+
+TEST IN BROWSER:
+[ ] Open: http://localhost:3000
+[ ] Page loads (no white screen)
+[ ] Click "Login"
+[ ] Email: admin@forum.com
+[ ] Password: Admin123!
+[ ] Login successful
+[ ] Redirected to home page
+[ ] Threads are visible
+
+TEST FEATURES:
+[ ] Filter by category (dropdown)
+[ ] Sort by recent/popular/votes
+[ ] Search threads
+[ ] Click "Create Thread"
+[ ] Fill form and submit
+[ ] Thread created successfully
+[ ] Click thread to view details
+[ ] Add a reply
+[ ] Reply appears immediately
+[ ] Click "Reply" on your reply (nested reply)
+[ ] Nested reply works
+[ ] Click username to view profile
+[ ] Profile loads with user info
+[ ] User's threads displayed
+[ ] Upvote/downvote works
+
+VERIFY IN MONGODB:
+[ ] Open MongoDB Compass
+[ ] Connect to: mongodb://localhost:27017
+[ ] Database: forum_db exists
+[ ] Collections: users, threads, categories, tags
+[ ] Open threads collection
+[ ] Find your thread
+[ ] See replies array inside thread
+[ ] Replies are nested correctly
+
+IF SOMETHING DOESN'T WORK:
+[ ] Check browser console (F12)
+[ ] Check backend terminal for errors
+[ ] Check frontend terminal for errors
+[ ] Verify MongoDB is running
+[ ] Try clearing browser cache
+[ ] Try hard refresh (Ctrl+F5)
+[ ] Re-seed database: node utils/seedData.js
+
+QUICK COMMANDS:
+Seed: node utils/seedData.js
+Backend: npm run dev
+Frontend: cd frontend && npm run dev
+Auto-start: START_PROJECT.bat
+
+LOGIN CREDENTIALS:
+Email: admin@forum.com
+Password: Admin123!
+
+PORTS:
+Backend: http://localhost:5000
+Frontend: http://localhost:3000
+MongoDB: mongodb://localhost:27017
+
+========================================
+  EVERYTHING WORKING? YOU'RE DONE! 🎉
+========================================
